@@ -1,29 +1,30 @@
 /*
-*    This file is part of GPSLogger for Android.
-*
-*    GPSLogger for Android is free software: you can redistribute it and/or modify
-*    it under the terms of the GNU General Public License as published by
-*    the Free Software Foundation, either version 2 of the License, or
-*    (at your option) any later version.
-*
-*    GPSLogger for Android is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*    GNU General Public License for more details.
-*
-*    You should have received a copy of the GNU General Public License
-*    along with GPSLogger for Android.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2016 mendhak
+ *
+ * This file is part of GPSLogger for Android.
+ *
+ * GPSLogger for Android is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GPSLogger for Android is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GPSLogger for Android.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 package com.mendhak.gpslogger.senders;
 
 import android.location.Location;
+
+import com.mendhak.gpslogger.common.BundleConstants;
 import com.mendhak.gpslogger.common.SerializableLocation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import com.mendhak.gpslogger.common.Strings;
+import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -43,7 +44,7 @@ import java.util.TimeZone;
  */
 public class GpxReader {
 
-    private static final SimpleDateFormat gpxDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private static final SimpleDateFormat gpxDate = new SimpleDateFormat(Strings.getIsoDateTimeFormat());
 
     public static List<SerializableLocation> getPoints(File gpxFile) throws Exception {
         List<SerializableLocation> points;
@@ -56,7 +57,7 @@ public class GpxReader {
         Element root = dom.getDocumentElement();
         NodeList items = root.getElementsByTagName("trkpt");
 
-        points = new ArrayList<SerializableLocation>();
+        points = new ArrayList<>();
 
         for (int j = 0; j < items.getLength(); j++) {
             Node item = items.item(j);
@@ -81,7 +82,7 @@ public class GpxReader {
                 if (name.equalsIgnoreCase("speed")) {
                     pt.setSpeed(Float.parseFloat(item2.getFirstChild().getNodeValue()));
                 }
-                if (name.equalsIgnoreCase("hdop")) {
+                if (name.equalsIgnoreCase(BundleConstants.HDOP)) {
                     pt.setAccuracy(Float.parseFloat(item2.getFirstChild().getNodeValue()) * 5);
                 }
                 if (name.equalsIgnoreCase("time")) {

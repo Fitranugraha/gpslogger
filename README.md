@@ -1,74 +1,93 @@
-GPSLogger [![Build Status](https://travis-ci.org/mendhak/gpslogger.svg?branch=master)](https://travis-ci.org/mendhak/gpslogger)
+GPSLogger  [![githubactions](https://github.com/mendhak/gpslogger/workflows/Android%20CI/badge.svg)](https://github.com/mendhak/gpslogger/actions) [![pgp](assets/pgp.png)](https://keybase.io/mendhak)
 =========
 
-GPSLogger is an Android app that logs GPS information to GPX, KML or text files and has options for annotating and sharing.
 
-[Read about GPSLogger here](http://mendhak.github.com/gpslogger/)
+GPSLogger is an Android app that logs GPS information to various formats (GPX, KML, CSV, NMEA, Custom URL) and has options for uploading (SFTP, Google Drive, Dropbox, Email). This app aims to be as battery efficient as possible.
+
+[Read about GPSLogger's features here](http://mendhak.github.com/gpslogger/)
 
 ## Download
 
 You can [download it from Google Play](https://play.google.com/store/apps/details?id=com.mendhak.gpslogger).
 
-You can download the APK directly [from the releases](https://github.com/mendhak/gpslogger/releases). The oldest Android 2.x release is [here](https://github.com/mendhak/gpslogger/releases/tag/v43).
+You can download directly [from the releases](https://github.com/mendhak/gpslogger/releases).
+
+You can find it on [IzzySoft's F-Droid repo](https://apt.izzysoft.de/fdroid/repo) ([link](https://apt.izzysoft.de/fdroid/index/apk/com.mendhak.gpslogger)) 
+
+
 
 ## Contribute
 
-You can help with [translations](http://crowdin.net/project/gpslogger-for-android)
+You can help with [translations](http://crowdin.net/project/gpslogger-for-android) on Crowdin.
 
 You can also submit [pull requests](https://help.github.com/articles/using-pull-requests) for bug fixes and new features.
 
+I'm not very good at UIs, so any work with the layouts would be appreciated!  
 
-## License
 
-Licensed under [GPL v2](http://www.gnu.org/licenses/gpl-2.0.html).
+## License and policy
+
+[Licensed under GPL v2](LICENSE.md) | [Third party licenses](assets/text/opensource.md) | [Privacy policy](assets/text/privacypolicy.md)
 
 ## Donate
 
-You can donate Bitcoins to `1ArYCJf8pvwELiCSGerih5NQrczLJQdJpY`
+[Bitcoin](https://blockchain.info/payment_request?address=14bKk4sR1AD7avuJfBx2izy2FwyqMXEvcY) | [Paypal](https://paypal.me/mendhak) 
+
+
+## Verifying
+
+It's good practice to verify downloads.  In recent releases, a PGP signature and an SHA256 checksum will accompany each `.apk`.
+
+Import PGP Public Key from [Keybase.io](https://keybase.io/mendhak) or just `gpg --recv-key 6989CF77490369CFFDCBCD8995E7D75C76CBE9A9`
+
+To verify the integrity and signature:
+
+    $ gpg --verify ~/Downloads/gpslogger-71.apk.asc
+    
+To verify checksum:    
+    
+    $ sha256sum -c ~/Downloads/gpslogger-71.apk.SHA256
 
 
 Setting up the code
 =========
 
 
-The project is based on the new [Android build system](http://tools.android.com/tech-docs/new-build-system/user-guide) plugin for Gradle.
+The project is based on the [Android build system](http://tools.android.com/tech-docs/new-build-system/user-guide) plugin for Gradle.
 Feel free to adopt and document your own OS and IDEs.  These instructions are for Ubuntu Linux with IntelliJ IDEA.
 
 ### Set up your Android Development Environment
 
 Follow the instructions on the [Android Developer Website](http://developer.android.com/sdk/installing/index.html) to set up your computer for development.
 
-On Ubuntu 64bit, you may also need `ia32-libs`, follow [these instructions](http://stackoverflow.com/a/21956268/974369).  I did not need this for Ubuntu 14.04.
 
 
-![intellij](https://www.jetbrains.com/idea/docs/logo_intellij_idea.png)
+![intellij](assets/logo_IntelliJIDEA.png)
 
 Download and install [IntelliJ IDEA Community Edition](http://www.jetbrains.com/idea/download/index.html), which is free.
-Note that the Android build system version 0.9 does not work well with anything earlier than IntelliJ 13.1.2.
 
-
-### Get the Android SDK extra repositories
-
-This project uses certain Google libraries, you will need to add them. Run
-
-    <AndroidSDK>/tools/android
-
-Which brings up the Android SDK manager.  In here, choose
-
-*  Tools > Android SDK build tools 19.0.3
-*  Extras > Android Support Repository
-*  Extras > Android Support Library
-*  Extras > Google Play services
-*  Extras > Google Repository
 
 ### Clone the GPSLogger repository
 
     git clone git://github.com/mendhak/gpslogger.git
 
+### Get the Android SDK extra repositories
+
+This project uses certain Android libraries, you can install them using Google's poorly implemented [`sdkmanager`](https://developer.android.com/studio/command-line/sdkmanager.html):
+
+      echo y | $HOME/android-sdk/tools/bin/sdkmanager 'tools'
+      echo y | $HOME/android-sdk/tools/bin/sdkmanager 'platform-tools'
+      echo y | $HOME/android-sdk/tools/bin/sdkmanager 'build-tools;26.0.2'
+      echo y | $HOME/android-sdk/tools/bin/sdkmanager 'platforms;android-27'
+      echo y | $HOME/android-sdk/tools/bin/sdkmanager 'platforms;android-25'
+      echo y | $HOME/android-sdk/tools/bin/sdkmanager 'extras;google;m2repository'
+      echo y | $HOME/android-sdk/tools/bin/sdkmanager 'extras;android;m2repository'
+      echo y | $HOME/android-sdk/tools/bin/sdkmanager 'extras;google;google_play_services'
+
 
 ### Create local.properties
 
-IntelliJ/Android Studio [may not detect](http://stackoverflow.com/questions/19794200/gradle-android-and-the-android-home-sdk-location) your `ANDROID_HOME` environment variable, so create a file called `local.properties`, pointing at your Android SDK directory.
+Create a file called `local.properties`, pointing at your Android SDK directory.
 
     cd gpslogger
     echo "sdk.dir=/home/mendhak/Programs/Android" > local.properties
@@ -91,7 +110,7 @@ IntelliJ may not know where your Android SDK is.  You can find this under *File 
 
 ### OpenStreetMap Setup (Optional)
 
-Sign up for an account with [OpenStreetMap](http://openstreetmap.org) and log in.
+Sign up for an account with [OpenStreetMap](https://openstreetmap.org) and log in.
 
 Click on 'oauth settings'
 
@@ -154,6 +173,11 @@ so ensure that the emulator you are using is Android 4.2.2 (API level 17) or gre
 You can also debug directly against your phone - all phones Android 2.2 and above should have this framework installed.
 
 
+### Android Wear
+
+Due to extremely low usage and the final straw when Google deleted a Play service library version, I've had to remove Android Wear from this application.
+
+
 Overview
 ======
 
@@ -163,8 +187,8 @@ GPSLogger is composed of a few main components;
 
 ### Event Bus
 
-The Event Bus is where all the cross communication happens.  Various components raise their events on the Event Bus, 
-and other parts of the application listen for those events.  The most important one is when a location is obtained, 
+The Event Bus is where all the cross communication happens.  Various components raise their events on the Event Bus,
+and other parts of the application listen for those events.  The most important one is when a location is obtained,
  it is placed on the event bus and consumed by many fragments.
 
 ### GPS Logging Service

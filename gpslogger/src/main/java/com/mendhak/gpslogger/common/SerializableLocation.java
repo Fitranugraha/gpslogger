@@ -1,6 +1,27 @@
+/*
+ * Copyright (C) 2016 mendhak
+ *
+ * This file is part of GPSLogger for Android.
+ *
+ * GPSLogger for Android is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GPSLogger for Android is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GPSLogger for Android.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.mendhak.gpslogger.common;
 
 import android.location.Location;
+import android.os.Bundle;
+
 import java.io.Serializable;
 
 public class SerializableLocation implements Serializable {
@@ -17,6 +38,11 @@ public class SerializableLocation implements Serializable {
     private boolean hasAccuracy;
     private boolean hasBearing;
     private boolean hasSpeed;
+    private int satelliteCount;
+    private String detectedActivity;
+    private String hdop;
+    private String vdop;
+    private String pdop;
 
 
     public SerializableLocation(Location loc) {
@@ -33,20 +59,20 @@ public class SerializableLocation implements Serializable {
         hasAccuracy = loc.hasAccuracy();
         hasBearing = loc.hasBearing();
         hasSpeed = loc.hasSpeed();
-
+        satelliteCount = Maths.getBundledSatelliteCount(loc);
+        detectedActivity = extractExtra (loc, BundleConstants.DETECTED_ACTIVITY);
+        hdop = extractExtra(loc, BundleConstants.HDOP);
+        vdop = extractExtra(loc, BundleConstants.VDOP);
+        pdop = extractExtra(loc, BundleConstants.PDOP);
     }
 
-    public Location getLocation() {
-        Location loc = new Location(provider);
-        loc.setAltitude(altitude);
-        loc.setAccuracy((float) accuracy);
-        loc.setBearing(bearing);
-        loc.setLatitude(latitude);
-        loc.setLongitude(longitude);
-        loc.setSpeed(speed);
-        loc.setProvider(provider);
-        loc.setTime(time);
-        return loc;
+    private String extractExtra(Location loc, String key) {
+        if (loc.getExtras() != null
+                && !Strings.isNullOrEmpty(loc.getExtras().getString(key))) {
+            return loc.getExtras().getString(key);
+        }
+
+        return "";
     }
 
     public boolean hasAltitude(){
@@ -129,4 +155,15 @@ public class SerializableLocation implements Serializable {
         this.time = time;
     }
 
+    public int getSatelliteCount() {
+        return satelliteCount;
+    }
+
+    public String getDetectedActivity() { return detectedActivity; }
+
+    public String getHDOP() { return hdop; }
+
+    public String getVDOP() { return vdop; }
+
+    public String getPDOP() { return pdop; }
 }

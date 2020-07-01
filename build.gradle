@@ -1,1 +1,19 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.4.2'
+    }
+}
+
+project.ext.APP_ID = "com.mendhak.gpslogger"
+project.ext.APP_VERSION_CODE = 105
+project.ext.APP_VERSION_NAME ="105-remerge"
+

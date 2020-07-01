@@ -1,40 +1,61 @@
 buildscript {
     repositories {
+        google()
         mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.0.0'
+        classpath 'com.android.tools.build:gradle:3.4.2'
+        classpath "com.mendhak.gradlecrowdin:crowdin-plugin:0.1.0"
+        classpath 'org.jacoco:org.jacoco.core:0.7.4.201502262128'
+        classpath "com.moowork.gradle:gradle-node-plugin:0.13"
     }
 }
 
-plugins {
-    id "com.mendhak.gradlecrowdin" version "0.0.5"
-}
-
+//Android
 apply plugin: 'com.android.application'
+
+//Crowdin task
+apply plugin: 'com.mendhak.gradlecrowdin'
+//Generating PGP
+apply plugin: 'signing'
+//Generating colorful output
+apply from: 'buildtools/ColoredOutput.gradle'
+project.ext.set("GHACTIONS_FOLDING", true)
+//Generate help pages
+apply plugin: 'com.moowork.node'
 
 repositories {
     mavenCentral()
+
     jcenter()
+
     maven {
-        url  "https://dl.bintray.com/mendhak/maven"
+        url "https://jitpack.io"
     }
+    google()
+
+
 }
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 28
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 19
-        versionCode 63
-        versionName "63"
+        applicationId project.APP_ID
+        minSdkVersion 16
+        targetSdkVersion 28
+
+        versionCode project.APP_VERSION_CODE
+        versionName project.APP_VERSION_NAME
     }
 
     //Adding API keys to BuildConfig
     defaultConfig {
-        //Set these values in ~/.gradle/gradle.properties
+        //Set these values in ~/.gradle/gradle.properties, use in code as BuildConfig.OSM_CONSUMER_KEY
         buildConfigField "String", "OSM_CONSUMER_KEY", "\"" + GPSLOGGER_OSM_CONSUMERKEY + "\""
         buildConfigField "String", "OSM_CONSUMER_SECRET", "\"" + GPSLOGGER_OSM_CONSUMERSECRET + "\""
         buildConfigField "String", "DROPBOX_APP_KEY", "\"" + GPSLOGGER_DROPBOX_APPKEY + "\""
@@ -43,9 +64,19 @@ android {
     }
 
     buildTypes {
-        release {
-            minifyEnabled false
+        debug {
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            useProguard true
+            debuggable true
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            useProguard true
+            debuggable false
         }
     }
 
@@ -67,8 +98,8 @@ android {
         abortOnError false
     }
 
-    sourceSets {
-        androidTest.setRoot('src/test')
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
 
 
@@ -90,86 +121,125 @@ android {
         }
     }
 
-    //Copies final APK to this directory
-    assembleRelease.doLast {
-        copy{
-            from "build/outputs/apk/gpslogger-release.apk"
-            into "./"
-
-            // Use a closure to map the file name
-            rename { String fileName ->
-                fileName.replace('release', android.defaultConfig.versionName)
-            }
-        }
-    }
-
-    //Predexing libraries takes up too much memory and causes travis-ci to choke
-    dexOptions {
-        preDexLibraries = false
-    }
 }
+
+
 
 dependencies {
 
-    compile 'com.android.support:support-v4:22.1.1'
-    compile 'com.google.android.gms:play-services:7.0.0'
+    implementation 'com.android.support:support-v4:27.1.1'
+    implementation 'com.google.android.gms:play-services-base:16.0.1'
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
+    implementation 'com.google.android.gms:play-services-auth:16.0.1'
 
-    compile('commons-net:commons-net:2.0')
+    //FTP operations
+    implementation('commons-net:commons-net:3.4')
 
-    compile('org.apache.httpcomponents:httpmime:4.0.3'){
-        exclude module: 'commons-logging'
-        exclude module: 'httpcore'
-        exclude module: 'httpclient'
+
+    //Debug Logging
+    implementation('org.slf4j:slf4j-api:1.7.6')
+    implementation('com.github.tony19:logback-android-classic:1.1.1-2'){
+        exclude group: 'com.google.android', module: 'android'
     }
 
-    compile('org.apache.james:apache-mime4j:0.6.1'){
-        exclude module: 'commons-logging'
-    }
-
-    compile('oauth.signpost:signpost-commonshttp4:1.2.1.1'){
-        exclude module: 'commons-logging'
-        exclude module: 'httpcore'
-        exclude module: 'httpclient'
-    }
-
-    compile('oauth.signpost:signpost-core:1.2.1.1'){
-        exclude module: 'commons-codec'
-    }
-
-    compile('com.googlecode.json-simple:json-simple:1.1')
-
-    //Logging
-    compile('org.slf4j:slf4j-api:1.7.6')
-    compile('com.github.tony19:logback-android-classic:1.1.1-2')
-    compile('com.github.tony19:logback-android-core:1.1.1-2')
+    implementation('com.github.tony19:logback-android-core:1.1.1-2')
 
 
     //Android lollipop/material features including the Toolbar
-    compile "com.android.support:appcompat-v7:22.1.1"
+    implementation "com.android.support:appcompat-v7:27.1.1"
+
+    //Recycler view required by material dialog custom URL alert box
+    implementation "com.android.support:recyclerview-v7:27.1.1"
 
     //Cardviews
-    compile "com.android.support:cardview-v7:21.0.0"
+    implementation "com.android.support:cardview-v7:27.1.1"
 
     //Material dialogs
-    compile('com.afollestad:material-dialogs:0.7.2.8')
+    //Change to 0.8.5.7 when released
+    implementation('com.github.afollestad.material-dialogs:core:0.9.6.0@aar') {
+        transitive = true
+    }
+    implementation('com.github.afollestad.material-dialogs:commons:0.9.6.0@aar') {
+        transitive = true
+    }
 
     //The material drawer
-    compile 'com.heinrichreimersoftware.materialdrawer:library:2.1'
+    implementation('com.mikepenz:materialdrawer:4.6.4@aar') {
+        transitive = true
+    }
 
     //Progress button
-    compile 'com.github.dmytrodanylyk.android-process-button:library:1.0.0'
+    implementation 'com.github.dmytrodanylyk.android-process-button:library:1.0.4'
 
     //Android Priority Jobqueue
-    compile 'com.path:android-priority-jobqueue:1.1.2'
+    implementation ('com.birbit:android-priority-jobqueue:2.0.1'){
+        exclude group: 'com.google.android', module: 'android'
+    }
 
     //Event bus
-    compile 'de.greenrobot:eventbus:2.4.0'
+    implementation 'de.greenrobot:eventbus:2.4.0'
 
     //JARs which aren't on maven
-    compile 'com.mendhak.gpsloggersupport:activation:0.0.1'
-    compile 'com.mendhak.gpsloggersupport:additionnal:0.0.1'
-    compile 'com.mendhak.gpsloggersupport:mail:0.0.1'
-    compile 'com.mendhak.gpsloggersupport:dropbox-android-sdk:1.6.3'
+    //compile 'com.mendhak.gpsloggersupportfiles:owncloud-android-library:0.0.3@aar'
+    implementation 'com.github.owncloud:android-library:oc-android-library-0.9.14'
+
+    //Required by owncloud library
+    implementation ('commons-httpclient:commons-httpclient:3.1') {
+                exclude module: 'commons-logging'
+    }
+    implementation 'org.apache.jackrabbit:jackrabbit-webdav:2.12.2'
+
+    //Expandable textview in the FAQ
+    implementation 'com.ms-square:expandableTextView:0.1.4'
+
+    //The single letter text icons
+    implementation 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1'
+
+
+    //OKHTTP client
+    implementation 'com.squareup.okhttp3:okhttp:3.7.0'
+
+    //OKHTTP interceptor, works with oauth signpost
+    implementation 'se.akerfeldt:okhttp-signpost:1.1.0'
+
+    //OAuth signing
+    implementation('oauth.signpost:signpost-core:1.2.1.1'){
+        exclude module: 'commons-codec'
+    }
+
+    //Dropbox API 3
+    implementation 'com.dropbox.core:dropbox-core-sdk:3.0.3'
+
+    //Markdown to HTML library
+    implementation 'com.github.commonsguy:cwac-anddown:dedb48ec0f'
+
+    implementation group: 'com.jcraft', name: 'jsch', version: '0.1.54'
+    implementation group: 'com.jcraft', name: 'jzlib', version: '1.1.3'
+
+
+
+     //Libraries required for unit testing
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:1.10.19'
+    testImplementation 'org.json:json:20160810'
+    testImplementation 'androidx.test:runner:1.2.0'
+    testImplementation 'androidx.test:rules:1.2.0'
+
+
+}
+
+
+
+tasks.withType(Test) {
+    //Tell Gradle to always run the tests even if build is up to date
+    outputs.upToDateWhen { false }
+
+    //Tell Gradle to show test output in the console
+    testLogging {
+        events  "failed"
+        exceptionFormat = 'full'
+        showStandardStreams true
+    }
 }
 
 tasks.whenTaskAdded { task ->
@@ -179,25 +249,139 @@ tasks.whenTaskAdded { task ->
     }
 }
 
+task buildTranslationArray {
+
+    doLast {
+        def foundLocales = new StringBuilder()
+        foundLocales.append("new String[]{")
+
+        fileTree("src/main/res").visit { FileVisitDetails details ->
+            if(details.file.path.endsWith("strings.xml")){
+                def languageCode = details.file.parent.tokenize(File.separator).last().replaceAll('values-','').replaceAll('-r','-')
+                languageCode = (languageCode == "values") ? "en" : languageCode;
+                foundLocales.append("\"").append(languageCode).append("\"").append(",")
+            }
+        }
+
+        foundLocales.append("}")
+        //Don't forget to remove the trailing comma
+        def foundLocalesString = foundLocales.toString().replaceAll(',}','}')
+        android.defaultConfig.buildConfigField "String[]", "TRANSLATION_ARRAY", foundLocalesString
+    }
+
+
+}
+preBuild.dependsOn buildTranslationArray
+
+
+
+
 //Download translations from Crowdin
 if (project.hasProperty("CROWDIN_API_KEY")) {
-    crowdinDownload {
+
+    task crowdin1(group:"crowdin", type:com.mendhak.gradlecrowdin.DownloadTranslationsTask){
+
+            apiKey = CROWDIN_API_KEY
+            destination = "$projectDir/src/main/res"
+            projectId = 'gpslogger-for-android'
+
+            //Android projects
+            renameMapping = [
+                    from: '^([^-]*)/strings.xml$',
+                    to  : /values-\1\/strings.xml/
+            ]
+
+            excludePattern = '**/*.txt'
+    }
+
+    task crowdin2(group:"crowdin", type:com.mendhak.gradlecrowdin.DownloadTranslationsTask, dependsOn:"crowdin1"){
+
         apiKey = CROWDIN_API_KEY
         destination = "$projectDir/src/main/res"
         projectId = 'gpslogger-for-android'
 
         //Android projects
         renameMapping = [
-                from: '^(.*)/(.*)$',
-                to  : /values-\1\/\2/
+                from: '^([^-]*)-([^-]*)/strings.xml$',
+                to  : /values-\1-r\2\/strings.xml/
         ]
 
         excludePattern = '**/*.txt'
     }
 
+    task getallTranslations(group:"crowdin", dependsOn:"crowdin2")  {
+    }
+
+
     crowdinUpload {
         apiKey = CROWDIN_API_KEY
         projectId = 'gpslogger-for-android'
-        sourceFile = "$projectDir/src/main/res/values/strings.xml"
+        files = [
+                [name: "strings.xml", source: "$projectDir/src/main/res/values/strings.xml"]
+        ]
     }
 }
+
+task buildDocs(group: "docs", type: NodeTask, dependsOn:"installNodeModules") {
+    script = file('../assets/generate-pages/index.js')
+    execOverrides {
+        it.workingDir = '../assets/generate-pages'
+    }
+}
+
+task installNodeModules(group:"docs", type:NpmTask){
+    args = ['install']
+    execOverrides {
+        it.workingDir = '../assets/generate-pages'
+    }
+}
+
+task copyFAQsIntoAssets(group:"docs", type:Copy){
+    from '../assets/text/faq'
+    into 'src/main/assets/faq/'
+    include('*.md')
+}
+
+task deleteFAQsAssets(group:"docs", type:Delete){
+    def dirName = 'src/main/assets/faq'
+    fileTree( dirName ).include('**/*.md').each{
+            f -> delete f
+        }
+}
+
+task copyFinalAPK(group:'build') {
+    //Copies final APK to this directory
+    def finalApkName = "gpslogger-"+android.defaultConfig.versionName+".apk"
+
+    copy{
+        from "build/outputs/apk/release/gpslogger-release.apk"
+        into "./"
+
+        // Use a closure to map the file name
+        rename { String fileName ->
+            fileName.replace("gpslogger-release.apk", finalApkName)
+        }
+    }
+        //PGP Sign
+        //Verify with gpg --verify ~/Downloads/gpslogger-71.apk.asc
+    if(file(finalApkName).isFile()){
+        signing {
+            useGpgCmd()
+            sign file(finalApkName)
+        }
+
+        //SHA256 Checksum
+        //Verify with sha256sum -c ~/Downloads/gpslogger-71.apk.SHA256
+        ant.checksum(file: finalApkName, fileext: '.SHA256', algorithm: "SHA-256", pattern: "{0} {1}")
+    }
+
+}
+
+preBuild.dependsOn copyFAQsIntoAssets
+clean.dependsOn deleteFAQsAssets
+
+task deleteReleaseAPKs(group:"build", type:Delete){
+    delete fileTree(dir:'./', include:'*.apk*')
+}
+
+clean.dependsOn deleteReleaseAPKs

@@ -1,23 +1,26 @@
 /*
-*    This file is part of GPSLogger for Android.
-*
-*    GPSLogger for Android is free software: you can redistribute it and/or modify
-*    it under the terms of the GNU General Public License as published by
-*    the Free Software Foundation, either version 2 of the License, or
-*    (at your option) any later version.
-*
-*    GPSLogger for Android is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*    GNU General Public License for more details.
-*
-*    You should have received a copy of the GNU General Public License
-*    along with GPSLogger for Android.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2016 mendhak
+ *
+ * This file is part of GPSLogger for Android.
+ *
+ * GPSLogger for Android is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GPSLogger for Android is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GPSLogger for Android.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 package com.mendhak.gpslogger.senders;
 
-import org.slf4j.LoggerFactory;
+import com.mendhak.gpslogger.common.slf4j.Logs;
+import org.slf4j.Logger;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -28,7 +31,7 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipHelper {
     private static final int BUFFER = 2048;
-    private static final org.slf4j.Logger tracer = LoggerFactory.getLogger(ZipHelper.class.getSimpleName());
+    private static final Logger LOG = Logs.of(ZipHelper.class);
     private final String[] files;
     private final String zipFile;
 
@@ -37,7 +40,7 @@ public class ZipHelper {
         this.zipFile = zipFile;
     }
 
-    public void Zip() {
+    public void zipFiles() {
         try {
             BufferedInputStream origin;
             FileOutputStream dest = new FileOutputStream(zipFile);
@@ -61,7 +64,7 @@ public class ZipHelper {
 
             out.close();
         } catch (Exception e) {
-            tracer.error("Could not create zip file",e);
+            LOG.error("Could not create zip file", e);
         }
 
     }

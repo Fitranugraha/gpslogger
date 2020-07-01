@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2016 mendhak
+ *
+ * This file is part of GPSLogger for Android.
+ *
+ * GPSLogger for Android is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GPSLogger for Android is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GPSLogger for Android.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.mendhak.gpslogger.common;
 
 
@@ -6,12 +25,13 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
-import android.preference.PreferenceManager;
-import org.slf4j.LoggerFactory;
+import com.mendhak.gpslogger.common.slf4j.Logs;
+import org.slf4j.Logger;
 
 public class ContentApi extends ContentProvider {
 
-    private static final org.slf4j.Logger tracer = LoggerFactory.getLogger(ContentApi.class.getSimpleName());
+    private static final Logger LOG = Logs.of(ContentApi.class);
+    private PreferenceHelper preferenceHelper = PreferenceHelper.getInstance();
 
     @Override
     public boolean onCreate() {
@@ -22,13 +42,12 @@ public class ContentApi extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
         String queryType = uri.getPathSegments().get(0);
-        tracer.debug(queryType);
-        String result = "";
+        LOG.debug(queryType);
+        String result;
 
         switch(queryType){
             case "gpslogger_folder":
-                result = PreferenceManager.getDefaultSharedPreferences(getContext()).getString("gpslogger_folder",
-                        Utilities.GetDefaultStorageFolder(getContext()).getAbsolutePath());
+                result = preferenceHelper.getGpsLoggerFolder();
                 break;
             default:
                 result = "NULL";
@@ -36,7 +55,7 @@ public class ContentApi extends ContentProvider {
         }
 
 
-        tracer.debug(result);
+        LOG.debug(result);
         MatrixCursor matrixCursor = new MatrixCursor(new String[] { "Column1" });
 
         matrixCursor.newRow().add(result);

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="int" path="."/>
+    <external-files-path name="ext" path="/"/>
+    <external-path name="extpath" path="/" />
+</paths>

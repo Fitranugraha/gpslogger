@@ -9,7 +9,7 @@
             android:layout_height="fill_parent">
 
     <RelativeLayout android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="wrap_content">
 
 
         <TableLayout
@@ -43,10 +43,38 @@
                         android:gravity="center"
                         />
 
+                </LinearLayout>
+            </TableRow>
+            <TableRow>
+
+                <LinearLayout
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content">
+
+
+                    <EditText
+                        android:layout_alignParentRight="true"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/simple_lon_text"
+                        android:editable="false"
+                        android:selectAllOnFocus="true"
+                        android:textIsSelectable="true"
+                        android:textSize="@dimen/simpleview_latlong_textsize"
+                        android:fontFamily="sans-serif"
+                        android:textStyle="italic"
+                        android:background="@null"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        />
+
+
 
                 </LinearLayout>
             </TableRow>
-
             <TableRow>
                 <LinearLayout
                     android:gravity="center"
@@ -283,10 +311,9 @@
                         android:layout_gravity="center"
                         android:gravity="center"
                         android:visibility="visible"
-                        android:textSize="11sp"
+                        android:textSize="14sp"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:textStyle="italic"
                         android:paddingTop="12dp"
                         android:width="0dip"
                         android:text=""/>
@@ -302,34 +329,46 @@
 
                         <ImageView
                             android:id="@+id/simpleview_imgGpx"
+                            android:contentDescription="@string/log_gpx_title"
                             android:visibility="invisible"
                             android:layout_width="25dp"
                             android:layout_height="25dp"
                             android:src="@drawable/gpx"/>
                         <ImageView
                             android:id="@+id/simpleview_imgKml"
+                            android:contentDescription="@string/log_kml_title"
                             android:visibility="invisible"
                             android:layout_width="25dp"
                             android:layout_height="25dp"
                             android:src="@drawable/kml"/>
                         <ImageView
                             android:id="@+id/simpleview_imgCsv"
+                            android:contentDescription="@string/log_plain_text_title"
                             android:visibility="invisible"
                             android:layout_width="25dp"
                             android:layout_height="25dp"
                             android:src="@drawable/csv"/>
                         <ImageView
                             android:id="@+id/simpleview_imgNmea"
+                            android:contentDescription="@string/log_nmea_title"
                             android:visibility="invisible"
                             android:layout_width="25dp"
                             android:layout_height="25dp"
                             android:src="@drawable/nmea"/>
                         <ImageView
                             android:id="@+id/simpleview_imgLink"
+                            android:contentDescription="@string/log_customurl_title"
                             android:visibility="invisible"
                             android:layout_width="25dp"
                             android:layout_height="25dp"
                             android:src="@drawable/link"/>
+                        <ImageView
+                            android:id="@+id/simpleview_imgjson"
+                            android:contentDescription="@string/log_json_title"
+                            android:visibility="invisible"
+                            android:layout_width="25dp"
+                            android:layout_height="25dp"
+                            android:src="@drawable/geojson"/>
                     </LinearLayout>
 
                     <Space

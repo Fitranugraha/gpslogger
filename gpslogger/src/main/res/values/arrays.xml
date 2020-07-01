@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="filecreation_entries">
+        <item>@string/new_file_creation_onceamonth</item>
         <item>@string/new_file_creation_onceaday</item>
         <item>@string/new_file_creation_everystart</item>
         <item>@string/new_file_creation_custom</item>
     </string-array>
 
     <string-array name="filecreation_values">
+        <item>onceamonth</item>
         <item>onceaday</item>
         <item>everystart</item>
         <item>custom</item>
@@ -35,15 +37,12 @@
         <item>identifiable</item>
     </string-array>
 
-    <string-array name="opengts_server_communication_methods">
-        <item>HTTP GET</item>
-        <item>UDP Raw</item>
-    </string-array>
-
     <string-array name="opengts_server_communication_methods_values">
         <item>HTTP</item>
+        <item>HTTPS</item>
         <item>UDP</item>
     </string-array>
+
     <string-array name="autoftp_ssltls_entries">
         <item>@string/autoftp_ssltls_none</item>
         <item>@string/autoftp_ssltls_ssl</item>
@@ -59,14 +58,10 @@
         <item>@string/view_simple</item>
         <item>@string/view_detailed</item>
         <item>@string/view_big</item>
+        <item>@string/view_log</item>
     </string-array>
 
 
-    <string-array name="listeners">
-        <item>@string/listeners_gps</item>
-        <item>@string/listeners_cell</item>
-        <item>@string/listeners_passive</item>
-    </string-array>
 
 
 </resources>

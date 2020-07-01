@@ -1,38 +1,56 @@
+/*
+ * Copyright (C) 2016 mendhak
+ *
+ * This file is part of GPSLogger for Android.
+ *
+ * GPSLogger for Android is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * GPSLogger for Android is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GPSLogger for Android.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.mendhak.gpslogger.loggers.customurl;
 
-import android.location.Location;
-import com.mendhak.gpslogger.common.SerializableLocation;
-import com.mendhak.gpslogger.common.Utilities;
-import com.mendhak.gpslogger.common.events.UploadEvents;
-import com.path.android.jobqueue.Job;
-import com.path.android.jobqueue.Params;
-import de.greenrobot.event.EventBus;
-import org.slf4j.LoggerFactory;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.Date;
-import java.util.Scanner;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.birbit.android.jobqueue.Job;
+import com.birbit.android.jobqueue.Params;
+import com.birbit.android.jobqueue.RetryConstraint;
+import com.mendhak.gpslogger.common.AppSettings;
+import com.mendhak.gpslogger.common.network.Networks;
+import com.mendhak.gpslogger.common.Strings;
+import com.mendhak.gpslogger.common.events.UploadEvents;
+import com.mendhak.gpslogger.common.slf4j.Logs;
+import de.greenrobot.event.EventBus;
+import okhttp3.*;
+
+import org.slf4j.Logger;
+import java.io.IOException;
+import java.util.Map;
+
 
 public class CustomUrlJob extends Job {
 
-    private static final org.slf4j.Logger tracer = LoggerFactory.getLogger(CustomUrlJob.class.getSimpleName());
-    private SerializableLocation loc;
-    private String annotation;
-    private int satellites;
-    private String logUrl;
-    private float batteryLevel;
-    private String androidId;
+    private static final Logger LOG = Logs.of(CustomUrlJob.class);
 
-    public CustomUrlJob(String customLoggingUrl, Location loc, String annotation, int satellites, float batteryLevel, String androidId) {
+    private UploadEvents.BaseUploadEvent callbackEvent;
+    private CustomUrlRequest urlRequest;
+
+    public CustomUrlJob(CustomUrlRequest urlRequest, UploadEvents.BaseUploadEvent callbackEvent) {
         super(new Params(1).requireNetwork().persist());
-        this.loc = new SerializableLocation(loc);
-        this.annotation = annotation;
-        this.satellites = satellites;
-        this.logUrl = customLoggingUrl;
-        this.batteryLevel = batteryLevel;
-        this.androidId = androidId;
+
+        this.callbackEvent = callbackEvent;
+        this.urlRequest = urlRequest;
     }
 
     @Override
@@ -41,48 +59,52 @@ public class CustomUrlJob extends Job {
 
     @Override
     public void onRun() throws Throwable {
-        HttpURLConnection conn;
 
-        //String logUrl = "http://192.168.1.65:8000/test?lat=%LAT&lon=%LON&sat=%SAT&desc=%DESC&alt=%ALT&acc=%ACC&dir=%DIR&prov=%PROV
-        // &spd=%SPD&time=%TIME&battery=%BATT&androidId=%AID&serial=%SER";
+        LOG.info("HTTP Request - " + urlRequest.getLogURL());
 
-        logUrl = logUrl.replaceAll("(?i)%lat", String.valueOf(loc.getLatitude()));
-        logUrl = logUrl.replaceAll("(?i)%lon", String.valueOf(loc.getLongitude()));
-        logUrl = logUrl.replaceAll("(?i)%sat", String.valueOf(satellites));
-        logUrl = logUrl.replaceAll("(?i)%desc", String.valueOf(URLEncoder.encode(Utilities.HtmlDecode(annotation), "UTF-8")));
-        logUrl = logUrl.replaceAll("(?i)%alt", String.valueOf(loc.getAltitude()));
-        logUrl = logUrl.replaceAll("(?i)%acc", String.valueOf(loc.getAccuracy()));
-        logUrl = logUrl.replaceAll("(?i)%dir", String.valueOf(loc.getBearing()));
-        logUrl = logUrl.replaceAll("(?i)%prov", String.valueOf(loc.getProvider()));
-        logUrl = logUrl.replaceAll("(?i)%spd", String.valueOf(loc.getSpeed()));
-        logUrl = logUrl.replaceAll("(?i)%time", String.valueOf(Utilities.GetIsoDateTime(new Date(loc.getTime()))));
-        logUrl = logUrl.replaceAll("(?i)%batt", String.valueOf(batteryLevel));
-        logUrl = logUrl.replaceAll("(?i)%aid", String.valueOf(androidId));
-        logUrl = logUrl.replaceAll("(?i)%ser", String.valueOf(Utilities.GetBuildSerial()));
+        OkHttpClient.Builder okBuilder = new OkHttpClient.Builder();
+        okBuilder.sslSocketFactory(Networks.getSocketFactory(AppSettings.getInstance()));
+        Request.Builder requestBuilder = new Request.Builder().url(urlRequest.getLogURL());
 
-        tracer.debug("Sending to URL: " + logUrl);
-        URL url = new URL(logUrl);
-
-        conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-
-        if(conn.getResponseCode() != 200){
-            tracer.error("Status code: " + String.valueOf(conn.getResponseCode()));
-        } else {
-            tracer.debug("Status code: " + String.valueOf(conn.getResponseCode()));
+        for(Map.Entry<String,String> header : urlRequest.getHttpHeaders().entrySet()){
+            requestBuilder.addHeader(header.getKey(), header.getValue());
         }
 
-        EventBus.getDefault().post(new UploadEvents.CustomUrl(true));
+        if ( ! urlRequest.getHttpMethod().equalsIgnoreCase("GET")) {
+            RequestBody body = RequestBody.create(null, urlRequest.getHttpBody());
+            requestBuilder = requestBuilder.method(urlRequest.getHttpMethod(),body);
+        }
+
+        Request request = requestBuilder.build();
+        Response response = okBuilder.build().newCall(request).execute();
+
+        if (response.isSuccessful()) {
+            LOG.debug("HTTP request complete with successful response code " + response);
+            EventBus.getDefault().post(callbackEvent.succeeded());
+        }
+        else {
+            LOG.error("HTTP request complete with unexpected response code " + response );
+            EventBus.getDefault().post(callbackEvent.failed("Unexpected code " + response,new Throwable(response.body().string())));
+        }
+
+        response.body().close();
     }
 
     @Override
-    protected void onCancel() {
-        EventBus.getDefault().post(new UploadEvents.CustomUrl(false));
+    protected void onCancel(int cancelReason, @Nullable Throwable throwable) {
+        EventBus.getDefault().post(callbackEvent.failed("Could not send to custom URL", throwable));
+        LOG.error("Custom URL: maximum attempts failed, giving up", throwable);
     }
 
     @Override
-    protected boolean shouldReRunOnThrowable(Throwable throwable) {
-        tracer.error("Could not send to custom URL", throwable);
-        return true;
+    protected RetryConstraint shouldReRunOnThrowable(@NonNull Throwable throwable, int runCount, int maxRunCount) {
+        LOG.warn(String.format("Custom URL: attempt %d failed, maximum %d attempts", runCount, maxRunCount));
+        return RetryConstraint.createExponentialBackoff(runCount, 5000);
+    }
+
+
+    @Override
+    protected int getRetryLimit() {
+        return 5;
     }
 }
